@@ -169,3 +169,48 @@ body.on-tree { overflow: hidden; }
 .badge { display: inline-block; font-size: .7rem; padding: 1px 7px; border-radius: 99px; background: var(--gold); color: #2a1f1a; font-weight: 700; margin-left: 6px; vertical-align: 1px; }
 .empty { color: var(--muted); font-size: .92rem; padding: 6px 0; }
 .sect { margin: 6px 2px 10px; color: var(--muted); font-size: .84rem; }
+
+/* ===== Giao diện đỏ vàng ===== */
+:root { --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cg fill='none' stroke='%23d9b15a' stroke-opacity='.16' stroke-width='1.2'%3E%3Cpath d='M22 4l18 18-18 18L4 22z'/%3E%3Ccircle cx='22' cy='22' r='5'/%3E%3C/g%3E%3C/svg%3E"); --gold-ink: #8a5a12; }
+@media (prefers-color-scheme: dark) { :root { --gold-ink: #e0b04a; } }
+body:not(.locked) { background: var(--bg) var(--pat); }
+.appbar { max-width: none; padding-left: max(16px, calc((100% - 560px) / 2 + 16px)); padding-right: max(16px, calc((100% - 560px) / 2 + 16px)); background: linear-gradient(#8d1c20, #6b1216); color: #f6dc8e; border-bottom: 2px solid #c9962b; box-shadow: 0 2px 10px rgba(0, 0, 0, .25); }
+.appbar h1 { font-family: Georgia, "Times New Roman", serif; letter-spacing: .03em; color: #f6dc8e; }
+.bstat { color: #f3d9a0; }
+.bstat.edit { background: #f2d685; color: #6b1115; }
+.bstat.warn { background: #fff1c2; color: #6b1115; }
+.tabs { background: linear-gradient(#fffaf0, #f6ecdc); border-top: 2px solid #c9962b; }
+@media (prefers-color-scheme: dark) { .tabs { background: linear-gradient(#2a211c, #211a16); } }
+.tabs button[aria-current="page"] { color: #a61e22; }
+@media (prefers-color-scheme: dark) { .tabs button[aria-current="page"] { color: #f2d685; } }
+.card { border: 1.5px solid #d9b15a; box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px rgba(201, 150, 43, .45), var(--shadow); padding: 16px 18px; }
+.card h2 { font-family: Georgia, "Times New Roman", serif; color: var(--gold-ink); font-size: .86rem; display: flex; align-items: center; gap: 8px; }
+.card h2::before, .card h2::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c9962b); }
+.card h2::before { flex: 0 0 14px; background: #c9962b; }
+.btn.primary { background: linear-gradient(#b3262b, #8d1c20); border-color: #c9962b; color: #fff1c2; }
+.sect { text-align: center; font-family: Georgia, serif; color: var(--gold-ink); font-style: italic; }
+.row { border: 1.5px solid #d9b15a; border-left: 5px solid #a61e22; }
+.ico { background: linear-gradient(#fff6d6, #f6e3a8); border: 1.5px solid #c9962b; border-radius: 50%; }
+.row-name { font-family: Georgia, serif; color: #8d1c20; }
+@media (prefers-color-scheme: dark) { .row-name { color: #f2d685; } .ico { background: #3a2a1a; } }
+.badge { background: #8d1c20; color: #f6dc8e; }
+
+/* khoá */
+.lock { background: var(--pat), radial-gradient(ellipse at 50% 15%, #9a2024, #4d0b0f 80%); }
+.lock-card { position: relative; padding: 30px 24px 24px; border: 3px double #c9962b; box-shadow: 0 0 0 5px #7a1418, 0 0 0 7px #d9b15a, 0 14px 44px rgba(0, 0, 0, .55); }
+.lock-card h1 { font-family: Georgia, "Times New Roman", serif; letter-spacing: .08em; text-transform: uppercase; font-size: 1.5rem; }
+.lock-card h1::after { content: "❖"; display: block; font-size: .9rem; color: #b3801f; margin-top: 2px; letter-spacing: 0; }
+
+/* cây */
+.tree-vp { background: var(--pat), radial-gradient(ellipse at 50% 20%, #9a2024, #5e0f13 75%); background-size: 44px 44px, auto; }
+.pf { border: 2px solid #b3801f; background: linear-gradient(#fdf1c8, #f1d487); box-shadow: 0 0 0 1px #5e0f13, 0 3px 8px rgba(0, 0, 0, .5); }
+.pf::after { content: ""; position: absolute; inset: 2px; border: 1px solid rgba(179, 128, 31, .75); border-radius: 5px; pointer-events: none; }
+.pf::before { content: ""; position: absolute; left: 50%; top: -1px; width: 22px; height: 4px; transform: translateX(-50%); background: #8d1c20; border-radius: 0 0 4px 4px; z-index: 1; }
+.pr { text-align: center; padding: 5px 9px 0; }
+.pr b { font-family: Georgia, "Times New Roman", serif; }
+.pr i { font-family: Georgia, serif; font-style: italic; }
+.pr.solo b, .pr.solo i { padding-left: 8px; }
+.pr + .pr { border-top: 1px dashed #b3801f; }
+.pr .pl { top: 6px; }
+.tree-top .fchip[aria-pressed="true"] { background: linear-gradient(#b3262b, #8d1c20); border-color: #c9962b; color: #fff1c2; }
+.tog { border-width: 2px; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); }

@@ -249,10 +249,10 @@
     if (!sp) return [h];
     return h.sex === 'f' && sp.sex === 'm' ? [sp, h] : [h, sp];
   }
-  var mctx = null;
+  var mctx = null, TREE_FONT = 'Georgia, "Times New Roman", serif';
   function wrapLines(text, maxW, px) {
     if (!mctx) mctx = document.createElement('canvas').getContext('2d');
-    mctx.font = '700 ' + px + 'px ' + (getComputedStyle(document.body).fontFamily || 'sans-serif');
+    mctx.font = '700 ' + px + 'px ' + TREE_FONT;
     var words = String(text).split(/\s+/).filter(Boolean), lines = [], cur = '';
     words.forEach(function (w) {
       var t = cur ? cur + ' ' + w : w;
@@ -885,7 +885,7 @@
     else if (id === 'pDead') { pDeadFlag = true; savePerson(); }
   });
   dlg.addEventListener('input', function (e) { if (e.target.form && e.target.form.id === 'dForm') syncDeath(); });
-  dlg.addEventListener('close', function () { dlg.innerHTML = ''; pwCb = null; if (state.tab === 'settings' && !state.locked) renderSettings(); });
+  dlg.addEventListener('close', function () { if (dlg.open) return; /* đã mở form khác ngay sau khi đóng */ dlg.innerHTML = ''; pwCb = null; if (state.tab === 'settings' && !state.locked) renderSettings(); });
 
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault(); state.installEvt = e; if (state.tab === 'settings') render();
