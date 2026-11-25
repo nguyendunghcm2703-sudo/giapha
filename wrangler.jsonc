@@ -1,0 +1,9 @@
+{
+  "name": "giapha",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-14",
+  "assets": { "directory": "./dist", "binding": "ASSETS" },
+  "kv_namespaces": [
+    { "binding": "GP_KV", "id": "4268eb1e71db4061ad009140c95343d3" }
+  ]
+}
