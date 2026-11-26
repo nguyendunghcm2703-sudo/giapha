@@ -8,7 +8,7 @@
   /* ---------- Hằng số & tiện ích ---------- */
   var KEY_CACHE = 'gp_cache_v1', KEY_OK = 'gp_ok_v1', KEY_PW = 'gp_pw_v1', KEY_COL = 'gp_col_v1';
   var DOW = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
-  var LOTUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5c3 2.6 3.4 6.4 0 10.5-3.4-4.1-3-7.9 0-10.5z" fill="#F4A3BF"/><path d="M3.5 9.5c3.6-.2 6.6 1.7 8.5 6.2-4.2.8-7.8-1.2-8.5-6.2z" fill="#EE7FA4"/><path d="M20.5 9.5c-3.6-.2-6.6 1.7-8.5 6.2 4.2.8 7.8-1.2 8.5-6.2z" fill="#EE7FA4"/><path d="M4 17.5c4.5 3.2 11.5 3.2 16 0-4.5-1.2-11.5-1.2-16 0z" fill="#5FA971"/></svg>';
+  var LOTUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8c2.3 2.4 3.3 4 3.3 5.4a3.3 3.3 0 0 1-6.6 0c0-1.4 1-3 3.3-5.4z" fill="#F59E0B"/><path d="M12 4.6c1 1.2 1.5 2 1.5 2.7a1.5 1.5 0 0 1-3 0c0-.7.5-1.5 1.5-2.7z" fill="#FDE68A"/><path d="M12 10.5v2" stroke="#5b3a1a" stroke-width="1.4" stroke-linecap="round"/><rect x="8" y="12.3" width="8" height="8.6" rx="1.4" fill="#FFF3D6" stroke="#B3801F" stroke-width="1.2"/><path d="M6 22.2h12" stroke="#B3801F" stroke-width="1.6" stroke-linecap="round"/></svg>';
 
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
@@ -125,7 +125,7 @@
     }).filter(Boolean);
     var roots = t.roots.slice(0, 200).map(function (r) {
       if (!r || typeof r.id !== 'string' || typeof r.personId !== 'string') return null;
-      return { id: r.id, name: str(r.name, 30) || 'Nhánh', clan: str(r.clan, 30), branch: str(r.branch, 30), gen: int(r.gen, 1, 99) || 1, personId: r.personId };
+      return { id: r.id, name: str(r.name, 30) || 'Nhánh', clan: str(r.clan, 30), branch: str(r.branch, 30), desc: str(r.desc, 200), gen: int(r.gen, 1, 99) || 1, personId: r.personId };
     }).filter(Boolean);
     return { roots: roots, people: people };
   }
@@ -344,7 +344,7 @@
     html += '<div class="tree-top">' + T.roots.map(function (r) {
       return '<button class="fchip" data-act="tBranch" data-id="' + esc(r.id) + '" aria-pressed="' + (r.id === cur.id) + '">' + esc(r.name) + '</button>';
     }).join('') + (state.edit ? '<button class="fchip add" data-act="tAddRoot">＋ Thêm gốc</button>' : '') + '</div>';
-    html += '<div class="tree-desc"><span>' + esc(sel ? descOf(cur, genOf(sel)) : descOf(cur, cur.gen) + ' (người gốc)') + '</span>' + (state.edit ? '<button class="linkbtn" data-act="tEditRoot">Sửa nhánh</button>' : '') + '</div>';
+    if (cur.desc || state.edit) html += '<div class="tree-desc"><span>' + esc(cur.desc || '') + '</span>' + (state.edit ? '<button class="linkbtn" data-act="tEditRoot">Sửa nhánh</button>' : '') + '</div>';
     html += '<div class="tree-tools"><div class="sbox"><input type="search" id="tq" placeholder="Tìm tên…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Tìm tên"><div class="sres" id="sres" hidden></div></div>' +
       '<select id="lvl" aria-label="Mức hiển thị"><option value="">Hiển thị</option><option value="all">Mở hết</option><option value="min">Thu gọn</option>' + lv + '</select></div>';
 
@@ -540,13 +540,14 @@
     if (needEdit()) return;
     var r = id ? rootById(id) : null; if (id && !r) return;
     rctx = r ? r.id : null;
-    var v = r || { name: state.tree.roots.length ? 'Nhánh ' + (state.tree.roots.length + 1) : 'Nhánh nội', clan: '', branch: '', gen: 1 };
+    var v = r || { name: state.tree.roots.length ? 'Nhánh ' + (state.tree.roots.length + 1) : 'Nhánh nội', clan: '', branch: '', gen: 1, desc: '' };
     dlg.innerHTML = '<form class="form" id="rForm" novalidate autocomplete="off"><h2>' + (r ? 'Sửa nhánh' : 'Thêm gốc') + '</h2>' +
       '<label>Tên nhánh<input type="text" name="rname" maxlength="30" placeholder="VD: Nhánh nội" value="' + esc(v.name) + '"></label>' +
       '<div class="row2"><label>Họ / tộc<input type="text" name="clan" maxlength="30" placeholder="VD: Nguyễn" value="' + esc(v.clan) + '"></label>' +
       '<label>Chi / phái<input type="text" name="branch" maxlength="30" placeholder="VD: đệ ngũ" value="' + esc(v.branch) + '"></label></div>' +
+      '<label>Câu miêu tả (không bắt buộc)<input type="text" name="desc" maxlength="200" placeholder="VD: Dòng họ Nguyễn ở làng …" value="' + esc(v.desc || '') + '"></label>' +
       '<label>Người gốc ở đời thứ<input type="number" name="gen" inputmode="numeric" min="1" max="99" value="' + esc(v.gen) + '"></label>' +
-      '<p class="note" style="margin:0">Hiển thị dạng: “Nguyễn đệ ngũ · đời thứ 10”. Đời của con cháu tự tính theo người gốc.</p>' +
+      '<p class="note" style="margin:0">Họ, chi và đời dùng để hiện “Nguyễn đệ ngũ · đời thứ 10” khi chọn một người. Đời của con cháu tự tính theo người gốc. Câu miêu tả hiện ngay dưới tên nhánh.</p>' +
       (r ? '' : '<div class="lbl">Người gốc</div><label>Họ tên<input type="text" name="pname" maxlength="60" placeholder="VD: Nguyễn Văn An"></label>' + sexSeg('m')) +
       '<p class="err" id="formErr"></p><div class="actions">' + (r ? '<button type="button" class="btn danger" id="rDel">Xoá nhánh</button><span class="grow"></span>' : '') +
       '<button type="button" class="btn" id="cancelBtn">Huỷ</button><button type="submit" class="btn primary">Lưu</button></div></form>';
@@ -557,7 +558,7 @@
     var name = f.rname.value.trim(), gen = parseInt(f.gen.value, 10);
     if (!name) { err.textContent = 'Hãy nhập tên nhánh.'; return; }
     if (!(gen >= 1 && gen <= 99)) { err.textContent = 'Đời phải từ 1 đến 99.'; return; }
-    var vals = { name: name, clan: f.clan.value.trim(), branch: f.branch.value.trim(), gen: gen };
+    var vals = { name: name, clan: f.clan.value.trim(), branch: f.branch.value.trim(), desc: f.desc.value.trim(), gen: gen };
     if (rctx) Object.assign(rootById(rctx), vals);
     else {
       var pn = f.pname.value.trim();

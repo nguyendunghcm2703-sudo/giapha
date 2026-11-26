@@ -248,3 +248,7 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 
 .tabs .ti-emo { font-size: 22px; line-height: 26px; opacity: .75; }
 .tabs button[aria-current="page"] .ti-emo { opacity: 1; }
+
+.tree-desc span { font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.tree-desc { align-items: flex-start; }
+.tree-desc .linkbtn { white-space: nowrap; flex: none; }
