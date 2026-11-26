@@ -214,3 +214,37 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .pr .pl { top: 6px; }
 .tree-top .fchip[aria-pressed="true"] { background: linear-gradient(#b3262b, #8d1c20); border-color: #c9962b; color: #fff1c2; }
 .tog { border-width: 2px; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); }
+
+/* ===== Biểu tượng nét vàng, con dấu ===== */
+.tabs .ti { filter: none; display: grid; place-items: center; height: 26px; }
+.tabs .ti svg { width: 25px; height: 25px; }
+.seal { width: 66px; height: 66px; margin: 0 auto 6px; display: grid; place-items: center; background: linear-gradient(#b3262b, #8d1c20); border-radius: 10px; box-shadow: 0 0 0 2px #fdf1c8, 0 0 0 4px #a61e22, 0 3px 8px rgba(0, 0, 0, .35); transform: rotate(-3deg); }
+.seal span { font: 700 1.55rem Georgia, "Times New Roman", serif; color: #f6dc8e; letter-spacing: .02em; }
+.lock-card .sub { display: block; margin: 0 0 12px; font: italic .9rem Georgia, serif; color: #8a4a1d; }
+.lock-card h1::after { display: none; }
+.lock-card h1 { margin-top: 14px; }
+
+/* ===== Máy tính (màn rộng) ===== */
+@media (min-width: 820px) {
+  :root { --gx: max(20px, calc((100% - 760px) / 2)); }
+  main { max-width: 800px; }
+  .appbar { padding-left: var(--gx); padding-right: var(--gx); }
+  .tabs { max-width: none; grid-template-columns: repeat(3, minmax(0, 190px)); justify-content: center; }
+  .tabs button { flex-direction: row; gap: 8px; font-size: .86rem; }
+  .rows.cards { grid-template-columns: 1fr 1fr; }
+  .tree-screen { max-width: none; }
+  .tree-top, .tree-desc, .tree-tools, .tree-hint { padding-left: var(--gx); padding-right: var(--gx); }
+  .tree-bar { padding-left: var(--gx); padding-right: var(--gx); }
+  .tree-vp { border-left: 0; border-right: 0; }
+  .tree-fabs { right: 24px; bottom: 24px; }
+  dialog { margin: auto; border-radius: 22px; max-width: 520px; }
+  #updateBar { bottom: calc(var(--nav-h) + 12px); }
+}
+
+/* vợ chồng chung một khung: đường nối liền, có hình thoi nhỏ ở giữa */
+.pr + .pr { border-top: 0; }
+.pr + .pr::before { content: ""; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, #b3801f 18%, #b3801f 82%, transparent); }
+.pr + .pr::after { content: ""; position: absolute; left: 50%; top: -3px; width: 6px; height: 6px; transform: translateX(-50%) rotate(45deg); background: #a61e22; border: 1px solid #b3801f; }
+
+.tabs .ti-emo { font-size: 22px; line-height: 26px; opacity: .75; }
+.tabs button[aria-current="page"] .ti-emo { opacity: 1; }

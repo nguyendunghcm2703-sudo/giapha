@@ -384,7 +384,8 @@
   function fitTree() {
     var vp = $('#tvp'); if (!vp || !tsize) return;
     var vw = vp.clientWidth, vh = vp.clientHeight;
-    var k = Math.max(0.2, Math.min(vw / tsize.w, vh / tsize.h, 1));
+    var cap = vw >= 820 ? 1.6 : 1; // máy tính: cho phép phóng to hơn để cây ít người không bị nhỏ
+    var k = Math.max(0.2, Math.min(vw / tsize.w, vh / tsize.h, cap));
     tv = { k: k, x: (vw - tsize.w * k) / 2, y: Math.max(0, (vh - tsize.h * k) / 2) };
     applyTv();
   }
@@ -787,7 +788,7 @@
 
   /* ---------- Màn hình khoá ---------- */
   function renderLock() {
-    $('#view').innerHTML = '<div class="lock"><form class="lock-card" id="lockForm" novalidate autocomplete="off"><div class="tree-ico">🌳</div><h1>Gia phả</h1><p>Nhập mật khẩu để xem</p>' +
+    $('#view').innerHTML = '<div class="lock"><form class="lock-card" id="lockForm" novalidate autocomplete="off"><div class="seal"><span>Họ</span></div><h1>Gia phả</h1><small class="sub">Cội nguồn dòng họ</small><p>Nhập mật khẩu để xem</p>' +
       '<input type="password" name="pw" id="lpw" aria-label="Mật khẩu" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
       '<p class="err" id="lerr" role="alert"></p><button class="btn" type="submit" id="lbtn">Mở</button></form></div>';
     var i = $('#lpw'); if (i) i.focus();
@@ -886,6 +887,14 @@
   });
   dlg.addEventListener('input', function (e) { if (e.target.form && e.target.form.id === 'dForm') syncDeath(); });
   dlg.addEventListener('close', function () { if (dlg.open) return; /* đã mở form khác ngay sau khi đóng */ dlg.innerHTML = ''; pwCb = null; if (state.tab === 'settings' && !state.locked) renderSettings(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (state.tab !== 'tree' || state.locked || dlg.open || e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target && e.target.tagName; if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
+    if (e.key === '+' || e.key === '=') { zoomBy(1.2); e.preventDefault(); }
+    else if (e.key === '-' || e.key === '_') { zoomBy(1 / 1.2); e.preventDefault(); }
+    else if (e.key === '0') { fitTree(); e.preventDefault(); }
+  });
 
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault(); state.installEvt = e; if (state.tab === 'settings') render();
