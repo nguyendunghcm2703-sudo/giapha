@@ -8,7 +8,7 @@
   /* ---------- Hằng số & tiện ích ---------- */
   var KEY_CACHE = 'gp_cache_v1', KEY_OK = 'gp_ok_v1', KEY_PW = 'gp_pw_v1', KEY_COL = 'gp_col_v1';
   var DOW = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
-  var LOTUS = '<span class="cd" aria-hidden="true">🕯️</span>';
+  var LOTUS = '<svg viewBox="0 0 16 24" aria-hidden="true"><path d="M8 1.2c2.1 2.3 2.9 3.7 2.9 5a2.9 2.9 0 0 1-5.8 0c0-1.3.8-2.7 2.9-5z" fill="#FF9F1C"/><path d="M8 4c1 1.2 1.5 2 1.5 2.7a1.5 1.5 0 0 1-3 0C6.5 6 7 5.2 8 4z" fill="#FFE27A"/><rect x="7.35" y="9.2" width="1.3" height="2.4" rx=".6" fill="#4a2a14"/><rect x="3.3" y="11.4" width="9.4" height="10.2" rx="1.5" fill="#B3262B"/><rect x="4.6" y="12" width="1.6" height="9" rx=".8" fill="#E0545A" opacity=".75"/><rect x="3.3" y="14.4" width="9.4" height="1.3" fill="#F2D685"/><rect x="3.3" y="18.2" width="9.4" height="1.3" fill="#F2D685"/><rect x="1.8" y="21.2" width="12.4" height="2.2" rx=".9" fill="#D9A93B"/></svg>';
 
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
@@ -53,7 +53,7 @@
   }
   function deathLunar(p) {
     var dd = p.dead && p.death; if (!dd) return null;
-    return { d: dd.d, m: dd.m, y: dd.y || null, leap: !!dd.leap };
+    return { d: dd.d, m: dd.m, y: dd.y || null, leap: !!dd.leap, tho: dd.tho || null, duong: dd.duong || null };
   }
   // Lần giỗ gần nhất (từ hôm nay trở đi): { date (dương), dd (số ngày còn lại), n (giỗ lần thứ n) }
   function gioNext(dl, from) {
@@ -114,6 +114,7 @@
           var Y = y || state.today.y;
           if (d <= L.daysInMonth(m, Y)) { var l = L.solarToLunar(d, m, Y); death = { d: l.d, m: l.m, y: y ? l.y : null, leap: !!l.leap }; }
         } else death = { d: d, m: m, y: y, leap: !!dd.leap };
+        if (death) { death.tho = int(dd.tho, 1, 130); death.duong = int(dd.duong, 1, 130); }
       }
       return {
         id: x.id, name: str(x.name, 60), sex: x.sex === 'f' ? 'f' : 'm', note: str(x.note, 60),
@@ -145,21 +146,20 @@
     return 'Máy chủ gặp lỗi (' + r.status + '). Hãy thử lại.';
   }
   function saveCache() { LS.set(KEY_CACHE, { version: state.version, tree: state.tree }); LS.set(KEY_OK, true); }
-  function saveCol() { LS.set(KEY_COL, state.collapsed); }
 
   function applyServer(data) {
     var t = sanitizeTree(data.tree) || emptyTree();
     state.tree = t; state.version = data.version || 0; state.loaded = true; state.offline = false;
     if (state.tsel && !personById(state.tsel)) state.tsel = null;
     if (!rootById(state.troot)) state.troot = t.roots.length ? t.roots[0].id : null;
-    if (!state.colInit && t.people.length > 40) autoCollapse();
+    if (!state.seeded) seedCollapse();
     saveCache();
   }
-  // lần đầu mở cây lớn: thu gọn từ đời thứ 4 trở xuống
-  function autoCollapse() {
+  // mỗi lần mở app: mỗi nhánh chỉ hiện 3 đời (gốc, con, cháu); từ đời thứ 4 trở xuống thu gọn
+  function seedCollapse() {
     var col = {};
-    state.tree.roots.forEach(function (r) { walk(r.personId, function (h, depth) { if (depth >= 3 && childrenOf(h.id).length) col[h.id] = 1; }); });
-    state.collapsed = col; state.colInit = true; saveCol();
+    state.tree.roots.forEach(function (r) { walk(r.personId, function (h, depth) { if (depth >= 2 && childrenOf(h.id).length) col[h.id] = 1; }); });
+    state.collapsed = col; state.seeded = true;
   }
 
   function refresh(manual) {
@@ -240,8 +240,8 @@
   }
 
   /* ---------- Bố cục cây ---------- */
-  var FW = 120, FP = 3, SG = 14, LG = 46, PAD = 20;
-  var tv = { x: 0, y: 0, k: 1 }, tvFit = true, tsize = null, tpos = {}, pendingCenter = null;
+  var FW = 120, FP = 3, SG = 14, LG = 56, PAD = 20;
+  var tv = { k: 1, sx: 0, sy: 0 }, tvFit = true, tsize = null, tpos = {}, pendingCenter = null;
   var pctx = null, dctx = null, rctx = null, pDeadFlag = false, pwCb = null;
 
   function frameRows(h) {
@@ -306,12 +306,19 @@
     return { items: items, lines: lines, w: root.w + 2 * PAD, h: total };
   }
 
+  function ageTxt(dl) {
+    var a = [];
+    if (dl && dl.tho) a.push('thọ ' + dl.tho + ' tuổi');
+    if (dl && dl.duong) a.push('hưởng dương ' + dl.duong + ' tuổi');
+    return a.join(', ');
+  }
   function personInfo(p) {
     var a = [];
     if (p.note) a.push(p.note);
     if (p.by) a.push('sinh ' + (p.bd && p.bm ? p.bd + '/' + p.bm + '/' : '') + p.by);
     var dl = deathLunar(p);
     if (dl) {
+      var ag = ageTxt(dl); if (ag) a.push(ag);
       a.push('mất ' + lunTxt(dl) + (dl.y ? ' ' + dl.y : ''));
       var g = gioNext(dl, state.today);
       if (g) { var gl = lunarOf(g.date); a.push('giỗ ' + lunTxt(gl)); }
@@ -339,16 +346,16 @@
     var lay = layoutTree(personById(cur.personId));
     tsize = { w: lay.w, h: lay.h };
     var mg = maxGenOf(cur), lv = '';
-    for (var g = cur.gen + 2; g < mg; g++) lv += '<option value="' + g + '">Đến đời ' + g + '</option>';
+    for (var g = cur.gen + 3; g < mg; g++) lv += '<option value="' + g + '">Đến đời ' + g + '</option>';
 
     html += '<div class="tree-top">' + T.roots.map(function (r) {
       return '<button class="fchip" data-act="tBranch" data-id="' + esc(r.id) + '" aria-pressed="' + (r.id === cur.id) + '">' + esc(r.name) + '</button>';
     }).join('') + (state.edit ? '<button class="fchip add" data-act="tAddRoot">＋ Thêm gốc</button>' : '') + '</div>';
     if (cur.desc || state.edit) html += '<div class="tree-desc"><span>' + esc(cur.desc || '') + '</span>' + (state.edit ? '<button class="linkbtn" data-act="tEditRoot">Sửa nhánh</button>' : '') + '</div>';
     html += '<div class="tree-tools"><div class="sbox"><input type="search" id="tq" placeholder="Tìm tên…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Tìm tên"><div class="sres" id="sres" hidden></div></div>' +
-      '<select id="lvl" aria-label="Mức hiển thị"><option value="">Hiển thị</option><option value="all">Mở hết</option><option value="min">Thu gọn</option>' + lv + '</select></div>';
+      '<select id="lvl" aria-label="Mức hiển thị"><option value="">Hiển thị</option><option value="all">Mở hết</option><option value="def">Mặc định (3 đời)</option><option value="min">Thu gọn</option>' + lv + '</select></div>';
 
-    html += '<div class="tree-stage"><div class="tree-vp" id="tvp"><div class="tree-world" id="tworld" style="width:' + lay.w + 'px;height:' + lay.h + 'px">' +
+    html += '<div class="tree-stage"><div class="tree-vp" id="tvp"><div class="tree-sizer" id="tsizer"><div class="tree-world" id="tworld" style="width:' + lay.w + 'px;height:' + lay.h + 'px">' +
       '<svg width="' + lay.w + '" height="' + lay.h + '" aria-hidden="true">' + lay.lines.map(function (l) {
         return '<line x1="' + l[0] + '" y1="' + l[1] + '" x2="' + l[2] + '" y2="' + l[3] + '"/>';
       }).join('') + '</svg>' + lay.items.map(function (it) {
@@ -357,11 +364,11 @@
           return '<div class="pr ' + p.sex + (it.rows.length === 1 ? ' solo' : '') + (p.dead ? ' dead' : '') + (sel && sel.id === p.id ? ' sel' : '') + '" data-pid="' + esc(p.id) + '" style="height:' + r.h + 'px">' +
             '<b style="font-size:' + r.fs + 'px;line-height:' + r.lh + 'px">' + r.lines.map(esc).join('<br>') + '</b>' + (yearsOf(p) ? '<i>' + esc(yearsOf(p)) + '</i>' : '') + (p.dead ? '<span class="pl">' + LOTUS + '</span>' : '') + '</div>';
         }).join('') + '</div>';
-        if (it.nAll) s += '<div class="tog' + (it.col ? ' closed' : '') + '" data-tog="' + esc(it.hid) + '" style="left:' + it.cx + 'px;top:' + (it.y + it.fh + 1) + 'px" role="button" aria-label="' + (it.col ? 'Mở rộng' : 'Thu gọn') + '">' + (it.col ? '+' + it.hidden : '−') + '</div>';
+        if (it.nAll) s += '<div class="tog' + (it.col ? ' closed' : '') + '" data-tog="' + esc(it.hid) + '" style="left:' + it.cx + 'px;top:' + (it.y + it.fh + 2) + 'px" role="button" aria-label="' + (it.col ? 'Mở rộng' : 'Thu gọn') + '">' + (it.col ? '+' + it.hidden : '−') + '</div>';
         return s;
-      }).join('') + '</div></div>';
+      }).join('') + '</div></div></div>';
     html += '<div class="tree-fabs"><button data-act="tZoomIn" aria-label="Phóng to">＋</button><button data-act="tZoomOut" aria-label="Thu nhỏ">−</button><button data-act="tFit" aria-label="Vừa khung">⤢</button></div></div>';
-    if (!sel) html += '<div class="tree-hint">Kéo để di chuyển · Chụm hai ngón để phóng to · Chạm vào một người · Chạm vòng tròn dưới khung để thu gọn / mở rộng</div>';
+    if (!sel) html += '<div class="tree-hint">Vuốt để xem tiếp · Chụm hai ngón để phóng to · Chạm vào một người · Chạm vòng tròn dưới khung để thu gọn / mở rộng</div>';
     else {
       var gn = genOf(sel);
       html += '<div class="tree-bar"><div class="tb-name">' + esc(sel.name) + (sel.dead ? '<span class="pl">' + LOTUS + '</span>' : '') + '</div>' +
@@ -377,108 +384,115 @@
     bindTree();
   }
 
-  function applyTv() {
-    var w = $('#tworld'); if (!w) return;
-    w.style.transform = 'translate(' + tv.x + 'px,' + tv.y + 'px) scale(' + tv.k + ')';
+  // Khung cây là vùng cuộn thật (vuốt / lăn chuột). Cây nằm trong "sizer" có kích thước = kích thước cây × tỉ lệ.
+  function setK(k) {
+    tv.k = k;
+    var s = $('#tsizer'), w = $('#tworld'); if (!s || !w || !tsize) return;
+    s.style.width = Math.round(tsize.w * k) + 'px'; s.style.height = Math.round(tsize.h * k) + 'px';
+    w.style.transform = 'scale(' + k + ')';
   }
-  function fitTree() {
+  function saveScroll() { var vp = $('#tvp'); if (vp) { tv.sx = vp.scrollLeft; tv.sy = vp.scrollTop; } }
+  function applyTv() {
+    var vp = $('#tvp'); if (!vp) return;
+    setK(tv.k); vp.scrollLeft = tv.sx; vp.scrollTop = tv.sy; saveScroll();
+  }
+  // full=true (nút ⤢ / phím 0): vừa khung, chữ không nhỏ hơn 60%. Mặc định khi mở: ưu tiên dễ đọc, chữ không nhỏ hơn 80%, không phóng quá 100%.
+  function fitTree(full) {
     var vp = $('#tvp'); if (!vp || !tsize) return;
-    var vw = vp.clientWidth, vh = vp.clientHeight;
-    var cap = vw >= 820 ? 1.6 : 1; // máy tính: cho phép phóng to hơn để cây ít người không bị nhỏ
-    var k = Math.max(0.2, Math.min(vw / tsize.w, vh / tsize.h, cap));
-    tv = { k: k, x: (vw - tsize.w * k) / 2, y: Math.max(0, (vh - tsize.h * k) / 2) };
-    applyTv();
+    var vw = vp.clientWidth, k;
+    if (full === true) k = Math.min(vw >= 820 ? 1.6 : 1, Math.max(0.6, vw / tsize.w));
+    else k = Math.min(1, Math.max(0.8, vw / tsize.w));
+    setK(k);
+    var root = rootById(state.troot), rp = root && tpos[root.personId];
+    var s = $('#tsizer');
+    vp.scrollLeft = rp && s.offsetWidth > vw ? Math.max(0, rp.cx * k - vw / 2) : 0; // cây rộng: đưa tổ tiên gốc vào giữa
+    vp.scrollTop = 0; saveScroll();
+  }
+  function worldAt(ax, ay) {
+    var vp = $('#tvp'), s = $('#tsizer');
+    return { x: (vp.scrollLeft + ax - s.offsetLeft) / tv.k, y: (vp.scrollTop + ay - s.offsetTop) / tv.k };
+  }
+  // đổi tỉ lệ nhưng giữ điểm (wx, wy) của cây ở đúng chỗ (ax, ay) trên màn hình
+  function zoomTo(k, ax, ay, wx, wy) {
+    var vp = $('#tvp'), s = $('#tsizer'); if (!vp || !s) return;
+    setK(Math.max(0.3, Math.min(3, k)));
+    vp.scrollLeft = s.offsetLeft + wx * tv.k - ax; vp.scrollTop = s.offsetTop + wy * tv.k - ay; saveScroll();
+  }
+  function zoomBy(f) {
+    var vp = $('#tvp'); if (!vp) return;
+    var ax = vp.clientWidth / 2, ay = vp.clientHeight / 2, w = worldAt(ax, ay);
+    zoomTo(tv.k * f, ax, ay, w.x, w.y);
   }
   function centerOn(pid) {
-    var vp = $('#tvp'); if (!vp) return;
+    var vp = $('#tvp'), s = $('#tsizer'); if (!vp || !s) return;
     var els = document.querySelectorAll('[data-pid]'), el = null;
     for (var i = 0; i < els.length; i++) if (els[i].dataset.pid === pid) { el = els[i]; break; }
     if (!el) return;
     var pf = el.parentNode, cx = pf.offsetLeft + FW / 2, cy = pf.offsetTop + pf.offsetHeight / 2;
-    var k = Math.max(tv.k, 0.9);
-    tv = { k: k, x: vp.clientWidth / 2 - cx * k, y: vp.clientHeight / 2 - cy * k };
-    applyTv();
+    setK(Math.max(tv.k, 0.8));
+    vp.scrollLeft = s.offsetLeft + cx * tv.k - vp.clientWidth / 2; vp.scrollTop = cy * tv.k - vp.clientHeight / 2; saveScroll();
   }
-  function zoomAt(f, cx, cy) {
-    var k = Math.max(0.2, Math.min(3, tv.k * f)), r = k / tv.k;
-    tv.x = cx - (cx - tv.x) * r; tv.y = cy - (cy - tv.y) * r; tv.k = k; applyTv();
+  function nodeScreen(pos) {
+    var vp = $('#tvp'), s = $('#tsizer'); if (!vp || !s || !pos) return null;
+    return { x: s.offsetLeft + pos.cx * tv.k - vp.scrollLeft, y: pos.y * tv.k - vp.scrollTop };
   }
-  function zoomBy(f) { var vp = $('#tvp'); if (vp) zoomAt(f, vp.clientWidth / 2, vp.clientHeight / 2); }
 
   function bindTree() {
     var vp = $('#tvp'); if (!vp) return;
-    var ptrs = {}, drag = null, pinch = null;
-    var rel = function (e) { var r = vp.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-    var ids = function () { return Object.keys(ptrs); };
-    var startPinch = function () {
-      var a = ptrs[ids()[0]], b = ptrs[ids()[1]];
-      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, k: tv.k, wx: (mx - tv.x) / tv.k, wy: (my - tv.y) / tv.k };
-    };
-    vp.addEventListener('pointerdown', function (e) {
-      ptrs[e.pointerId] = rel(e);
-      try { vp.setPointerCapture(e.pointerId); } catch (x) {}
-      if (ids().length === 1) {
-        var c = e.target.closest ? e.target.closest('[data-pid]') : null;
-        var tg = e.target.closest ? e.target.closest('[data-tog]') : null;
-        drag = { sx: ptrs[e.pointerId].x, sy: ptrs[e.pointerId].y, ox: tv.x, oy: tv.y, moved: false, pid: c ? c.dataset.pid : null, tog: tg ? tg.dataset.tog : null };
-      } else if (ids().length === 2) { drag = null; startPinch(); }
+    vp.addEventListener('scroll', saveScroll, { passive: true });
+    // chạm: chọn người / thu gọn (click không phát sinh khi người dùng đang vuốt cuộn)
+    vp.addEventListener('click', function (e) {
+      var tg = e.target.closest('[data-tog]');
+      if (tg) { toggleNode(tg.dataset.tog); return; }
+      var c = e.target.closest('[data-pid]');
+      if (c) { state.tsel = c.dataset.pid; renderTree(); return; }
+      if (state.tsel) { state.tsel = null; renderTree(); }
     });
-    vp.addEventListener('pointermove', function (e) {
-      if (!ptrs[e.pointerId]) return;
-      ptrs[e.pointerId] = rel(e);
-      if (pinch && ids().length >= 2) {
-        var a = ptrs[ids()[0]], b = ptrs[ids()[1]];
-        var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-        var k = Math.max(0.2, Math.min(3, pinch.k * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d));
-        tv.k = k; tv.x = mx - pinch.wx * k; tv.y = my - pinch.wy * k; applyTv();
-      } else if (drag) {
-        var p = ptrs[e.pointerId], dx = p.x - drag.sx, dy = p.y - drag.sy;
-        if (!drag.moved && Math.abs(dx) + Math.abs(dy) > 8) drag.moved = true;
-        if (drag.moved) { tv.x = drag.ox + dx; tv.y = drag.oy + dy; applyTv(); }
-      }
-    });
-    var up = function (e) {
-      if (!ptrs[e.pointerId]) return;
-      var d = drag; delete ptrs[e.pointerId];
-      if (ids().length < 2) pinch = null;
-      if (ids().length === 1) { var q = ptrs[ids()[0]]; drag = { sx: q.x, sy: q.y, ox: tv.x, oy: tv.y, moved: true, pid: null, tog: null }; }
-      else drag = null;
-      if (e.type === 'pointerup' && d && !d.moved && ids().length === 0) {
-        if (d.tog) toggleNode(d.tog);
-        else if (d.pid) { state.tsel = d.pid; renderTree(); }
-        else if (state.tsel) { state.tsel = null; renderTree(); }
-      }
-    };
-    vp.addEventListener('pointerup', up);
-    vp.addEventListener('pointercancel', up);
+    // máy tính: Ctrl + lăn chuột (hoặc chụm trên touchpad) để phóng to; lăn chuột thường là cuộn
     vp.addEventListener('wheel', function (e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
       e.preventDefault();
-      var p = rel(e); zoomAt(Math.exp(-e.deltaY * 0.0015), p.x, p.y);
+      var r = vp.getBoundingClientRect(), ax = e.clientX - r.left, ay = e.clientY - r.top, w = worldAt(ax, ay);
+      zoomTo(tv.k * Math.exp(-e.deltaY * 0.01), ax, ay, w.x, w.y);
     }, { passive: false });
+    // điện thoại: chụm hai ngón để phóng to (một ngón thì cuộn như bình thường)
+    var p0 = null;
+    var info = function (e) {
+      var a = e.touches[0], b = e.touches[1], r = vp.getBoundingClientRect();
+      return { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1, mx: (a.clientX + b.clientX) / 2 - r.left, my: (a.clientY + b.clientY) / 2 - r.top };
+    };
+    vp.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 2) { var i = info(e), w = worldAt(i.mx, i.my); p0 = { d: i.d, k: tv.k, wx: w.x, wy: w.y }; } else p0 = null;
+    }, { passive: true });
+    vp.addEventListener('touchmove', function (e) {
+      if (!p0 || e.touches.length !== 2) return;
+      e.preventDefault();
+      var i = info(e); zoomTo(p0.k * i.d / p0.d, i.mx, i.my, p0.wx, p0.wy);
+    }, { passive: false });
+    vp.addEventListener('touchend', function (e) { if (e.touches.length < 2) p0 = null; }, { passive: true });
   }
 
   /* --- thu gọn / mở rộng --- */
   function toggleNode(hid) {
-    var old = tpos[hid];
+    var before = nodeScreen(tpos[hid]);
     if (state.collapsed[hid]) delete state.collapsed[hid];
     else {
       state.collapsed[hid] = 1;
       if (state.tsel) { var sub = collect(hid, []), self = frameRows(personById(hid)).map(function (p) { return p.id; }); if (sub.indexOf(state.tsel) >= 0 && self.indexOf(state.tsel) < 0) state.tsel = null; }
     }
-    saveCol(); state.colInit = true; renderTree();
+    renderTree();
     // giữ nguyên vị trí khung vừa bấm trên màn hình
-    var nw = tpos[hid];
-    if (old && nw) { tv.x += (old.cx - nw.cx) * tv.k; tv.y += (old.y - nw.y) * tv.k; applyTv(); }
+    var after = nodeScreen(tpos[hid]), vp = $('#tvp');
+    if (before && after && vp) { vp.scrollLeft += after.x - before.x; vp.scrollTop += after.y - before.y; saveScroll(); }
   }
   function applyLevel(v) {
     var root = rootById(state.troot); if (!root) return;
     walk(root.personId, function (h) { delete state.collapsed[h.id]; });
     if (v !== 'all') {
-      var G = v === 'min' ? root.gen + 1 : parseInt(v, 10);
+      var G = v === 'min' ? root.gen + 1 : v === 'def' ? root.gen + 2 : parseInt(v, 10);
       walk(root.personId, function (h, d) { if (root.gen + d >= G && childrenOf(h.id).length) state.collapsed[h.id] = 1; });
     }
-    state.colInit = true; saveCol(); state.tsel = null; tvFit = true; renderTree();
+    state.tsel = null; tvFit = true; renderTree();
   }
   // mở đường tới một người, chọn và đưa vào giữa màn hình
   function reveal(pid) {
@@ -486,7 +500,7 @@
     var h = headOf(p), guard = 0;
     while (h.parent && guard++ < 80) { var up = personById(h.parent); if (!up) break; h = headOf(up); delete state.collapsed[h.id]; }
     var rd = rootDepth(p); if (rd.root) state.troot = rd.root.id;
-    saveCol(); state.tsel = p.id; state.tab = 'tree'; pendingCenter = p.id;
+    state.tsel = p.id; state.tab = 'tree'; pendingCenter = p.id;
     render(); window.scrollTo(0, 0);
   }
   function searchPeople(q) {
@@ -523,6 +537,7 @@
       return '<li><button class="row' + (o.g.dd === 0 ? ' today' : '') + '" data-act="reveal" data-id="' + esc(o.p.id) + '"><span class="ico">' + LOTUS + '</span><span class="row-body">' +
         '<span class="row-name">' + esc(o.p.name) + (o.g.n && o.g.n >= 1 ? '<span class="badge">Giỗ lần thứ ' + o.g.n + '</span>' : '') + '</span>' +
         '<span class="row-sub" style="display:block">Mất ' + esc(lunTxt(o.dl)) + (o.dl.y ? ' năm ' + o.dl.y : '') + '</span>' +
+        (ageTxt(o.dl) ? '<span class="row-sub" style="display:block">' + esc(ageTxt(o.dl).charAt(0).toUpperCase() + ageTxt(o.dl).slice(1)) + '</span>' : '') +
         '<span class="row-sub" style="display:block">Giỗ ' + esc(lunTxt(gl)) + ' · ' + esc(dw) + ' ' + pad(o.g.date.d) + '/' + pad(o.g.date.m) + '/' + o.g.date.y + '</span>' +
         (gen ? '<span class="row-sub" style="display:block">' + esc(descOf(r, gen)) + '</span>' : '') +
         '</span><span class="row-right"><b>' + left + '</b></span></button></li>';
@@ -620,7 +635,7 @@
       var of = personById(pctx.of);
       p = Object.assign({ id: uid(), dead: false, death: null, spouse: null, isSpouse: false, parent: null }, vals);
       if (pctx.kind === 'spouse') { if (!of || of.spouse) return; p.isSpouse = true; p.spouse = of.id; of.spouse = p.id; }
-      else { if (!of) return; p.parent = headOf(of).id; delete state.collapsed[headOf(of).id]; saveCol(); }
+      else { if (!of) return; p.parent = headOf(of).id; delete state.collapsed[headOf(of).id]; }
       state.tree.people.push(p); tvFit = true;
     }
     state.tsel = p.id;
@@ -652,6 +667,8 @@
       '<label>Tháng<input type="number" name="m" inputmode="numeric" min="1" max="12" value="' + esc(dd.m || '') + '"></label>' +
       '<label>Năm mất (âm)<input type="number" name="y" inputmode="numeric" min="1000" max="2199" placeholder="VD: 2022" value="' + esc(dd.y || '') + '"></label></div>' +
       '<label class="chk"><input type="checkbox" name="leap"' + (dd.leap ? ' checked' : '') + '> Tháng nhuận</label>' +
+      '<div class="row2"><label>Thọ (tuổi)<input type="number" name="tho" inputmode="numeric" min="1" max="130" value="' + esc(dd.tho || '') + '"></label>' +
+      '<label>Hưởng dương (tuổi)<input type="number" name="duong" inputmode="numeric" min="1" max="130" value="' + esc(dd.duong || '') + '"></label></div>' +
       '<p class="preview" id="dprev"></p>' +
       '<p class="err" id="formErr"></p><div class="actions">' + (p.dead ? '<button type="button" class="btn danger" id="dClear">Xoá ngày mất</button><span class="grow"></span>' : '') +
       '<button type="button" class="btn" id="cancelBtn">Huỷ</button><button type="submit" class="btn primary">Lưu</button></div></form>';
@@ -660,13 +677,14 @@
   }
   function readDeath() {
     var f = $('#dForm').elements, num = function (n) { var x = parseInt(f[n].value, 10); return isNaN(x) ? null : x; };
-    return { d: num('d'), m: num('m'), y: num('y'), leap: f.leap.checked };
+    return { d: num('d'), m: num('m'), y: num('y'), leap: f.leap.checked, tho: num('tho'), duong: num('duong') };
   }
   function validDeath(v) {
     if (!v.d || !v.m) return 'Hãy nhập ngày và tháng.';
     if (v.m < 1 || v.m > 12 || v.d < 1) return 'Ngày hoặc tháng không hợp lệ.';
     if (v.d > 30) return 'Ngày âm lịch tối đa là 30.';
     if (v.y != null && (v.y < 1000 || v.y > 2199)) return 'Năm mất không hợp lệ.';
+    if ((v.tho != null && (v.tho < 1 || v.tho > 130)) || (v.duong != null && (v.duong < 1 || v.duong > 130))) return 'Tuổi phải từ 1 đến 130.';
     if (v.y != null && v.y >= 1900 && !resolveLunar(v.d, v.m, v.y, v.leap)) return 'Ngày âm lịch này không tồn tại ở năm ' + v.y + '.';
     return '';
   }
@@ -683,7 +701,7 @@
     var v = readDeath(), msg = validDeath(v), p = personById(dctx);
     if (msg) { $('#formErr').textContent = msg; return; }
     if (!p) return;
-    p.dead = true; p.death = { d: v.d, m: v.m, y: v.y, leap: v.leap };
+    p.dead = true; p.death = { d: v.d, m: v.m, y: v.y, leap: v.leap, tho: v.tho, duong: v.duong };
     persistTree(); dlg.close(); toast('Đã lưu'); render();
   }
   function clearDeath() {
@@ -766,8 +784,7 @@
       var t = sanitizeTree(obj && obj.tree ? obj.tree : obj);
       if (!t || !t.people.length || !t.roots.length) { toast('File không có gia phả hợp lệ'); return; }
       if (!confirm('Thay toàn bộ gia phả hiện tại bằng file này (' + t.people.length + ' người)?')) return;
-      state.tree = t; state.troot = t.roots[0].id; state.tsel = null; tvFit = true; state.collapsed = {}; state.colInit = false;
-      if (t.people.length > 40) autoCollapse();
+      state.tree = t; state.troot = t.roots[0].id; state.tsel = null; tvFit = true; state.seeded = false; seedCollapse();
       persistTree(); toast('Đã nhập ' + t.people.length + ' người'); render();
     };
     rd.onerror = function () { toast('File không đọc được'); };
@@ -776,14 +793,14 @@
   function wipeTree() {
     if (needEdit()) return;
     if (!confirm('Xoá toàn bộ gia phả (' + state.tree.people.length + ' người) khỏi máy chủ?\nNên xuất file sao lưu trước. Không hoàn tác được.')) return;
-    state.tree = emptyTree(); state.troot = null; state.tsel = null; state.collapsed = {}; saveCol(); tvFit = true;
+    state.tree = emptyTree(); state.troot = null; state.tsel = null; state.collapsed = {}; tvFit = true;
     persistTree(); toast('Đã xoá gia phả'); render();
   }
   function forgetDevice() {
     if (!confirm('Khoá app và xoá dữ liệu gia phả đã lưu trên máy này?')) return;
     [KEY_CACHE, KEY_OK, KEY_PW, KEY_COL].forEach(LS.del);
     state.tree = emptyTree(); state.version = 0; state.loaded = false; state.viewPw = null; state.edit = false; state.editPw = null;
-    state.dirty = false; state.collapsed = {}; state.colInit = false; state.tsel = null; state.troot = null; state.locked = true; state.tab = 'tree';
+    state.dirty = false; state.collapsed = {}; state.seeded = false; state.tsel = null; state.troot = null; state.locked = true; state.tab = 'tree';
     render();
   }
 
@@ -839,7 +856,7 @@
       case 'tEditRoot': openRootForm(state.troot); break;
       case 'tZoomIn': zoomBy(1.25); break;
       case 'tZoomOut': zoomBy(0.8); break;
-      case 'tFit': fitTree(); break;
+      case 'tFit': fitTree(true); break;
       case 'tEdit': openPersonForm(state.tsel); break;
       case 'tDeath': openDeathForm(state.tsel); break;
       case 'tSpouse': openPersonForm(null, { kind: 'spouse', of: state.tsel }); break;
@@ -894,7 +911,7 @@
     var t = e.target && e.target.tagName; if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;
     if (e.key === '+' || e.key === '=') { zoomBy(1.2); e.preventDefault(); }
     else if (e.key === '-' || e.key === '_') { zoomBy(1 / 1.2); e.preventDefault(); }
-    else if (e.key === '0') { fitTree(); e.preventDefault(); }
+    else if (e.key === '0') { fitTree(true); e.preventDefault(); }
   });
 
   window.addEventListener('beforeinstallprompt', function (e) {
@@ -971,11 +988,11 @@
 
   /* ---------- Khởi động ---------- */
   (function boot() {
-    var cache = LS.get(KEY_CACHE, null), pw = LS.get(KEY_PW, null), col = LS.get(KEY_COL, null);
-    state.collapsed = col && typeof col === 'object' ? col : {}; state.colInit = col !== null;
+    var cache = LS.get(KEY_CACHE, null), pw = LS.get(KEY_PW, null);
+    LS.del(KEY_COL); // bản cũ có nhớ trạng thái thu gọn: nay luôn mở ở 3 đời
     if (cache && LS.get(KEY_OK, false)) {
       var t = sanitizeTree(cache.tree);
-      if (t) { state.tree = t; state.version = cache.version || 0; state.loaded = true; state.troot = t.roots.length ? t.roots[0].id : null; }
+      if (t) { state.tree = t; state.version = cache.version || 0; state.loaded = true; state.troot = t.roots.length ? t.roots[0].id : null; seedCollapse(); }
     }
     state.viewPw = pw;
     state.locked = !state.loaded && !pw;

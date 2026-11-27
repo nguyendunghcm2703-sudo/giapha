@@ -269,3 +269,21 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .appbar h1 { font-size: 1.02rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: .01em; }
 .bstat { flex: none; }
 .lock-card h1 { text-transform: none; letter-spacing: .01em; font-size: 1.35rem; line-height: 1.3; text-wrap: balance; }
+
+/* ===== Khung cây cuộn được ===== */
+.tree-vp { overflow: auto; touch-action: pan-x pan-y; cursor: default; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #c9962b rgba(0, 0, 0, .25); }
+.tree-sizer { position: relative; margin: 0 auto; }
+.tree-vp::-webkit-scrollbar { width: 8px; height: 8px; }
+.tree-vp::-webkit-scrollbar-thumb { background: #c9962b; border-radius: 4px; }
+.tree-vp::-webkit-scrollbar-track { background: rgba(0, 0, 0, .25); }
+
+/* nến đỏ */
+.pr .pl { width: 11px; height: 16px; top: 4px; right: 5px; }
+.pr .pl svg { width: 11px; height: 16px; }
+.tb-name .pl svg { width: 12px; height: 18px; }
+.ico svg { width: 20px; height: 30px; }
+
+.tog { height: 24px; min-width: 24px; padding: 0 7px; border-radius: 12px; font-size: 14px; }
+.tog::after { inset: -10px; }
+
+.form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
