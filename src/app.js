@@ -8,7 +8,7 @@
   /* ---------- Hằng số & tiện ích ---------- */
   var KEY_CACHE = 'gp_cache_v1', KEY_OK = 'gp_ok_v1', KEY_PW = 'gp_pw_v1', KEY_COL = 'gp_col_v1';
   var DOW = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
-  var LOTUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="cdl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F3CFC0"/><stop offset=".45" stop-color="#FDEBDD"/><stop offset="1" stop-color="#EFBFB3"/></linearGradient></defs><path d="M12 1.6c2.2 2.4 3.2 4 3.2 5.5a3.2 3.2 0 0 1-6.4 0c0-1.5 1-3.1 3.2-5.5z" fill="#FFA21F"/><path d="M12 4.4c1 1.3 1.5 2.1 1.5 2.8a1.5 1.5 0 0 1-3 0c0-.7.5-1.5 1.5-2.8z" fill="#FFE066"/><rect x="11.4" y="10.2" width="1.2" height="2.2" rx=".6" fill="#7B8798"/><path d="M7.4 14.2c0-1.1 1.2-1.9 2.4-1.9h4.4c1.2 0 2.4.8 2.4 1.9v7H7.4z" fill="url(#cdl)"/><path d="M7.4 14.6c0 1.6 1 2.1 1 3.2" fill="none" stroke="#E6B3A5" stroke-width=".7" stroke-linecap="round"/><rect x="7.4" y="20.3" width="9.2" height="1.6" rx=".6" fill="#E59FC4"/></svg>';
+  var LOTUS = '<span class="cd" aria-hidden="true">🕯️</span>';
 
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };

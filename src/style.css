@@ -254,5 +254,10 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .tree-desc .linkbtn { white-space: nowrap; flex: none; }
 .ico svg { width: 30px; height: 30px; }
 
-.tabs .ti-emo { font-size: 0; opacity: .8; }
-.tabs .ti-emo svg { width: 26px; height: 26px; }
+
+/* cây nến = emoji 🕯️ */
+.cd { display: block; line-height: 1; font-style: normal; }
+.pr .pl { width: auto; height: auto; top: 5px; right: 4px; }
+.pr .pl .cd { font-size: 12px; }
+.ico .cd { font-size: 24px; }
+.tb-name .cd { font-size: 16px; }
