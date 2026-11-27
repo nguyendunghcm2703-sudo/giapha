@@ -249,7 +249,7 @@
     if (!sp) return [h];
     return h.sex === 'f' && sp.sex === 'm' ? [sp, h] : [h, sp];
   }
-  var mctx = null, TREE_FONT = 'Georgia, "Times New Roman", serif';
+  var mctx = null, TREE_FONT = '"GP Serif", Georgia, "Times New Roman", serif';
   function wrapLines(text, maxW, px) {
     if (!mctx) mctx = document.createElement('canvas').getContext('2d');
     mctx.font = '700 ' + px + 'px ' + TREE_FONT;
@@ -267,7 +267,7 @@
   }
   // đo tên để hiện đủ: xuống dòng, quá 3 dòng thì giảm cỡ chữ
   function rowInfo(p, solo) {
-    var maxW = FW - 14 - (p.dead ? 14 : 0) - (solo ? 8 : 0), fs = 10.5, lines = wrapLines(p.name, maxW, fs);
+    var maxW = FW - 24 - (p.dead ? 14 : 0) - (solo ? 8 : 0), fs = 10.5, lines = wrapLines(p.name, maxW, fs);
     if (lines.length > 3) { fs = 9; lines = wrapLines(p.name, maxW, fs); }
     var lh = Math.round(fs * 1.15), yr = yearsOf(p) ? 13 : 0;
     return { p: p, lines: lines, fs: fs, lh: lh, h: 8 + lines.length * lh + yr };
@@ -789,7 +789,7 @@
 
   /* ---------- Màn hình khoá ---------- */
   function renderLock() {
-    $('#view').innerHTML = '<div class="lock"><form class="lock-card" id="lockForm" novalidate autocomplete="off"><div class="seal"><span>Họ</span></div><h1>Gia phả</h1><small class="sub">Cội nguồn dòng họ</small><p>Nhập mật khẩu để xem</p>' +
+    $('#view').innerHTML = '<div class="lock"><form class="lock-card" id="lockForm" novalidate autocomplete="off"><div class="seal"><span>Họ</span></div><h1>Thế phả lưu truyền hậu thế</h1><small class="sub">Cội nguồn dòng họ</small><p>Nhập mật khẩu để xem</p>' +
       '<input type="password" name="pw" id="lpw" aria-label="Mật khẩu" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
       '<p class="err" id="lerr" role="alert"></p><button class="btn" type="submit" id="lbtn">Mở</button></form></div>';
     var i = $('#lpw'); if (i) i.focus();
@@ -817,7 +817,7 @@
     document.body.classList.toggle('locked', state.locked);
     if (state.locked) { updateStatus(); renderLock(); return; }
     document.body.classList.toggle('on-tree', state.tab === 'tree');
-    $('#title').textContent = { tree: 'Gia phả', gio: 'Ngày giỗ sắp tới', settings: 'Cài đặt' }[state.tab];
+    $('#title').textContent = { tree: 'Thế phả lưu truyền hậu thế', gio: 'Ngày giỗ sắp tới', settings: 'Cài đặt' }[state.tab];
     document.querySelectorAll('#tabs button').forEach(function (b) { b.setAttribute('aria-current', b.dataset.tab === state.tab ? 'page' : 'false'); });
     updateStatus();
     ({ tree: renderTree, gio: renderGio, settings: renderSettings })[state.tab]();
@@ -982,6 +982,12 @@
     render();
     if (!state.locked) refresh(false);
   })();
+  // font chữ có chân tải xong thì đo lại tên trên thẻ (để xuống dòng đúng)
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load('700 12px "GP Serif"'), document.fonts.load('italic 12px "GP Serif"')]).then(function () {
+      mctx = null; if (!state.locked && state.tab === 'tree' && !dlg.open) renderTree();
+    }).catch(function () {});
+  }
   scheduleMidnight();
   window.addEventListener('load', initServiceWorker);
 })();

@@ -1,4 +1,7 @@
+@font-face { font-family: "GP Serif"; src: url("fonts/Lora.woff") format("woff"); font-weight: 400 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "GP Serif"; src: url("fonts/Lora-Italic.woff") format("woff"); font-weight: 400 700; font-style: italic; font-display: swap; }
 :root {
+  --serif: "GP Serif", Georgia, "Times New Roman", serif;
   --bg: #fbf6ee; --surface: #ffffff; --soft: #f6ecdc; --ink: #2a1f1a; --muted: #7b6b60; --line: #eadfce;
   --red: #a61e22; --red-ink: #ffffff; --off: #c0262c; --gold: #c9962b;
   --shadow: 0 1px 2px rgba(60, 30, 10, .08), 0 4px 14px rgba(60, 30, 10, .06);
@@ -175,7 +178,7 @@ body.on-tree { overflow: hidden; }
 @media (prefers-color-scheme: dark) { :root { --gold-ink: #e0b04a; } }
 body:not(.locked) { background: var(--bg) var(--pat); }
 .appbar { max-width: none; padding-left: max(16px, calc((100% - 560px) / 2 + 16px)); padding-right: max(16px, calc((100% - 560px) / 2 + 16px)); background: linear-gradient(#8d1c20, #6b1216); color: #f6dc8e; border-bottom: 2px solid #c9962b; box-shadow: 0 2px 10px rgba(0, 0, 0, .25); }
-.appbar h1 { font-family: Georgia, "Times New Roman", serif; letter-spacing: .03em; color: #f6dc8e; }
+.appbar h1 { font-family: var(--serif); letter-spacing: .03em; color: #f6dc8e; }
 .bstat { color: #f3d9a0; }
 .bstat.edit { background: #f2d685; color: #6b1115; }
 .bstat.warn { background: #fff1c2; color: #6b1115; }
@@ -184,21 +187,21 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .tabs button[aria-current="page"] { color: #a61e22; }
 @media (prefers-color-scheme: dark) { .tabs button[aria-current="page"] { color: #f2d685; } }
 .card { border: 1.5px solid #d9b15a; box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px rgba(201, 150, 43, .45), var(--shadow); padding: 16px 18px; }
-.card h2 { font-family: Georgia, "Times New Roman", serif; color: var(--gold-ink); font-size: .86rem; display: flex; align-items: center; gap: 8px; }
+.card h2 { font-family: var(--serif); color: var(--gold-ink); font-size: .86rem; display: flex; align-items: center; gap: 8px; }
 .card h2::before, .card h2::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, transparent, #c9962b); }
 .card h2::before { flex: 0 0 14px; background: #c9962b; }
 .btn.primary { background: linear-gradient(#b3262b, #8d1c20); border-color: #c9962b; color: #fff1c2; }
-.sect { text-align: center; font-family: Georgia, serif; color: var(--gold-ink); font-style: italic; }
+.sect { text-align: center; font-family: var(--serif); color: var(--gold-ink); font-style: italic; }
 .row { border: 1.5px solid #d9b15a; border-left: 5px solid #a61e22; }
 .ico { background: linear-gradient(#fff6d6, #f6e3a8); border: 1.5px solid #c9962b; border-radius: 50%; }
-.row-name { font-family: Georgia, serif; color: #8d1c20; }
+.row-name { font-family: var(--serif); color: #8d1c20; }
 @media (prefers-color-scheme: dark) { .row-name { color: #f2d685; } .ico { background: #3a2a1a; } }
 .badge { background: #8d1c20; color: #f6dc8e; }
 
 /* khoá */
 .lock { background: var(--pat), radial-gradient(ellipse at 50% 15%, #9a2024, #4d0b0f 80%); }
 .lock-card { position: relative; padding: 30px 24px 24px; border: 3px double #c9962b; box-shadow: 0 0 0 5px #7a1418, 0 0 0 7px #d9b15a, 0 14px 44px rgba(0, 0, 0, .55); }
-.lock-card h1 { font-family: Georgia, "Times New Roman", serif; letter-spacing: .08em; text-transform: uppercase; font-size: 1.5rem; }
+.lock-card h1 { font-family: var(--serif); letter-spacing: .08em; text-transform: uppercase; font-size: 1.5rem; }
 .lock-card h1::after { content: "❖"; display: block; font-size: .9rem; color: #b3801f; margin-top: 2px; letter-spacing: 0; }
 
 /* cây */
@@ -207,8 +210,8 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .pf::after { content: ""; position: absolute; inset: 2px; border: 1px solid rgba(179, 128, 31, .75); border-radius: 5px; pointer-events: none; }
 .pf::before { content: ""; position: absolute; left: 50%; top: -1px; width: 22px; height: 4px; transform: translateX(-50%); background: #8d1c20; border-radius: 0 0 4px 4px; z-index: 1; }
 .pr { text-align: center; padding: 5px 9px 0; }
-.pr b { font-family: Georgia, "Times New Roman", serif; }
-.pr i { font-family: Georgia, serif; font-style: italic; }
+.pr b { font-family: var(--serif); }
+.pr i { font-family: var(--serif); font-style: italic; }
 .pr.solo b, .pr.solo i { padding-left: 8px; }
 .pr + .pr { border-top: 1px dashed #b3801f; }
 .pr .pl { top: 6px; }
@@ -219,8 +222,8 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .tabs .ti { filter: none; display: grid; place-items: center; height: 26px; }
 .tabs .ti svg { width: 25px; height: 25px; }
 .seal { width: 66px; height: 66px; margin: 0 auto 6px; display: grid; place-items: center; background: linear-gradient(#b3262b, #8d1c20); border-radius: 10px; box-shadow: 0 0 0 2px #fdf1c8, 0 0 0 4px #a61e22, 0 3px 8px rgba(0, 0, 0, .35); transform: rotate(-3deg); }
-.seal span { font: 700 1.55rem Georgia, "Times New Roman", serif; color: #f6dc8e; letter-spacing: .02em; }
-.lock-card .sub { display: block; margin: 0 0 12px; font: italic .9rem Georgia, serif; color: #8a4a1d; }
+.seal span { font: 700 1.55rem var(--serif); color: #f6dc8e; letter-spacing: .02em; }
+.lock-card .sub { display: block; margin: 0 0 12px; font: italic .9rem var(--serif); color: #8a4a1d; }
 .lock-card h1::after { display: none; }
 .lock-card h1 { margin-top: 14px; }
 
@@ -261,3 +264,8 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .pr .pl .cd { font-size: 12px; }
 .ico .cd { font-size: 24px; }
 .tb-name .cd { font-size: 16px; }
+
+/* tiêu đề dài: "Thế phả lưu truyền hậu thế" */
+.appbar h1 { font-size: 1.02rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: .01em; }
+.bstat { flex: none; }
+.lock-card h1 { text-transform: none; letter-spacing: .01em; font-size: 1.35rem; line-height: 1.3; text-wrap: balance; }
