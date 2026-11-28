@@ -53,7 +53,7 @@
   }
   function deathLunar(p) {
     var dd = p.dead && p.death; if (!dd) return null;
-    return { d: dd.d, m: dd.m, y: dd.y || null, leap: !!dd.leap, tho: dd.tho || null, duong: dd.duong || null };
+    return { d: dd.d || null, m: dd.m || null, y: dd.y || null, leap: !!dd.leap, tho: dd.tho || null, duong: dd.duong || null };
   }
   // Lần giỗ gần nhất (từ hôm nay trở đi): { date (dương), dd (số ngày còn lại), n (giỗ lần thứ n) }
   function gioNext(dl, from) {
@@ -108,6 +108,10 @@
     var people = t.people.slice(0, 5000).map(function (x) {
       if (!x || typeof x.id !== 'string' || x.id.length > 60 || !str(x.name, 60)) return null;
       var death = null;
+      if (x.dead && !(x.death && int(x.death.d, 1, 31) && int(x.death.m, 1, 12))) { // đã mất nhưng chưa biết ngày mất
+        var d0 = x.death || {};
+        death = { d: null, m: null, y: int(d0.y, 1000, 2199), leap: false };
+      }
       if (x.dead && x.death && int(x.death.d, 1, 31) && int(x.death.m, 1, 12)) {
         var dd = x.death, d = int(dd.d, 1, 31), m = int(dd.m, 1, 12), y = int(dd.y, 1000, 2199);
         if (dd.cal === 'solar') { // dữ liệu cũ nhập ngày mất theo dương lịch: đổi sang âm lịch
@@ -247,7 +251,7 @@
   function frameRows(h) {
     var sp = h.spouse ? personById(h.spouse) : null;
     if (!sp) return [h];
-    return h.sex === 'f' && sp.sex === 'm' ? [sp, h] : [h, sp];
+    return [h, sp]; // người ruột thịt (thuộc dòng họ) ở trên, vợ/chồng nhập vào ở dưới
   }
   var mctx = null, TREE_FONT = '"GP Serif", Georgia, "Times New Roman", serif';
   function wrapLines(text, maxW, px) {
@@ -319,9 +323,12 @@
     var dl = deathLunar(p);
     if (dl) {
       var ag = ageTxt(dl); if (ag) a.push(ag);
-      a.push('mất ' + lunTxt(dl) + (dl.y ? ' ' + dl.y : ''));
-      var g = gioNext(dl, state.today);
-      if (g) { var gl = lunarOf(g.date); a.push('giỗ ' + lunTxt(gl)); }
+      if (!dl.d) a.push('đã mất' + (dl.y ? ' năm ' + dl.y : '') + ', chưa rõ ngày');
+      else {
+        a.push('mất ' + lunTxt(dl) + (dl.y ? ' ' + dl.y : ''));
+        var g = gioNext(dl, state.today);
+        if (g) { var gl = lunarOf(g.date); a.push('giỗ ' + lunTxt(gl)); }
+      }
     }
     return a.join(' · ');
   }
@@ -522,7 +529,7 @@
   function renderGio() {
     var t = state.today, out = [];
     state.tree.people.forEach(function (p) {
-      var dl = deathLunar(p); if (!dl) return;
+      var dl = deathLunar(p); if (!dl || !dl.d) return;
       var g = gioNext(dl, t); if (!g) return;
       out.push({ p: p, dl: dl, g: g, root: rootDepth(p) });
     });
@@ -662,7 +669,7 @@
     dctx = p.id;
     var dd = deathLunar(p) || { d: '', m: '', y: '', leap: false };
     dlg.innerHTML = '<form class="form" id="dForm" novalidate autocomplete="off"><h2>Ngày mất · ' + esc(p.name) + '</h2>' +
-      '<p class="note" style="margin:0">Nhập ngày mất theo <b>âm lịch</b>. Ngày giỗ tự tính: luôn là ngày liền trước ngày mất.</p>' +
+      '<p class="note" style="margin:0">Nhập ngày mất theo <b>âm lịch</b>. Ngày giỗ tự tính: luôn là ngày liền trước ngày mất. Chưa biết ngày mất thì để trống ngày và tháng.</p>' +
       '<div class="row3"><label>Ngày mất (âm)<input type="number" name="d" inputmode="numeric" min="1" max="30" value="' + esc(dd.d || '') + '"></label>' +
       '<label>Tháng<input type="number" name="m" inputmode="numeric" min="1" max="12" value="' + esc(dd.m || '') + '"></label>' +
       '<label>Năm mất (âm)<input type="number" name="y" inputmode="numeric" min="1000" max="2199" placeholder="VD: 2022" value="' + esc(dd.y || '') + '"></label></div>' +
@@ -670,7 +677,7 @@
       '<div class="row2"><label>Thọ (tuổi)<input type="number" name="tho" inputmode="numeric" min="1" max="130" value="' + esc(dd.tho || '') + '"></label>' +
       '<label>Hưởng dương (tuổi)<input type="number" name="duong" inputmode="numeric" min="1" max="130" value="' + esc(dd.duong || '') + '"></label></div>' +
       '<p class="preview" id="dprev"></p>' +
-      '<p class="err" id="formErr"></p><div class="actions">' + (p.dead ? '<button type="button" class="btn danger" id="dClear">Xoá ngày mất</button><span class="grow"></span>' : '') +
+      '<p class="err" id="formErr"></p><div class="actions">' + (p.dead ? '<button type="button" class="btn danger" id="dClear">Bỏ đánh dấu đã mất</button><span class="grow"></span>' : '') +
       '<button type="button" class="btn" id="cancelBtn">Huỷ</button><button type="submit" class="btn primary">Lưu</button></div></form>';
     syncDeath();
     if (!dlg.open) dlg.showModal();
@@ -680,7 +687,8 @@
     return { d: num('d'), m: num('m'), y: num('y'), leap: f.leap.checked, tho: num('tho'), duong: num('duong') };
   }
   function validDeath(v) {
-    if (!v.d || !v.m) return 'Hãy nhập ngày và tháng.';
+    if (!v.d && !v.m) { if (v.y != null && (v.y < 1000 || v.y > 2199)) return 'Năm mất không hợp lệ.'; return (v.tho != null && (v.tho < 1 || v.tho > 130)) || (v.duong != null && (v.duong < 1 || v.duong > 130)) ? 'Tuổi phải từ 1 đến 130.' : ''; }
+    if (!v.d || !v.m) return 'Hãy nhập cả ngày và tháng, hoặc để trống cả hai nếu chưa biết ngày mất.';
     if (v.m < 1 || v.m > 12 || v.d < 1) return 'Ngày hoặc tháng không hợp lệ.';
     if (v.d > 30) return 'Ngày âm lịch tối đa là 30.';
     if (v.y != null && (v.y < 1000 || v.y > 2199)) return 'Năm mất không hợp lệ.';
@@ -691,6 +699,7 @@
   function syncDeath() {
     if (!$('#dForm')) return;
     var v = readDeath(), pv = $('#dprev');
+    if (!v.d && !v.m && !validDeath(v)) { pv.textContent = 'Chưa rõ ngày mất: vẫn được ghi là đã mất, nhưng chưa có ngày giỗ.'; return; }
     if (!v.d || !v.m || validDeath(v)) { pv.textContent = 'Nhập ngày và tháng để xem ngày giỗ.'; return; }
     var Y = v.y || state.today.y, r = resolveLunar(v.d, v.m, Y, v.leap);
     if (!r) { pv.textContent = 'Không tìm được ngày tương ứng.'; return; }
@@ -706,9 +715,9 @@
   }
   function clearDeath() {
     var p = personById(dctx); if (!p) return;
-    if (!confirm('Xoá ngày mất của “' + p.name + '”?')) return;
+    if (!confirm('Bỏ đánh dấu đã mất của “' + p.name + '”?')) return;
     p.dead = false; p.death = null;
-    persistTree(); dlg.close(); toast('Đã xoá ngày mất'); render();
+    persistTree(); dlg.close(); toast('Đã bỏ đánh dấu đã mất'); render();
   }
 
   /* ---------- Hộp nhập mật khẩu ---------- */
