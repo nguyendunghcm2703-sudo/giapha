@@ -377,12 +377,10 @@
     html += '<div class="tree-fabs"><button data-act="tZoomIn" aria-label="Phóng to">＋</button><button data-act="tZoomOut" aria-label="Thu nhỏ">−</button><button data-act="tFit" aria-label="Vừa khung">⤢</button></div></div>';
     if (!sel) html += '<div class="tree-hint">Vuốt để xem tiếp · Chụm hai ngón để phóng to · Chạm vào một người · Chạm vòng tròn dưới khung để thu gọn / mở rộng</div>';
     else {
-      var gn = genOf(sel);
       html += '<div class="tree-bar"><div class="tb-name">' + esc(sel.name) + (sel.dead ? '<span class="pl">' + LOTUS + '</span>' : '') + '</div>' +
         '<div class="tb-sub">' + esc(personInfo(sel) || '—') + '</div>' +
-        '<div class="tb-sub">' + esc(gn ? descOf(cur, gn) : '') + '</div>' +
-        (state.edit ? '<div class="tb-btns"><button data-act="tEdit">Sửa</button><button data-act="tDeath">Ngày mất</button>' +
-        '<button data-act="tSpouse"' + (sel.spouse ? ' disabled' : '') + '>＋ Vợ/chồng</button><button data-act="tChild">＋ Con</button></div>' : '') + '</div>';
+        (state.edit ? '<div class="tb-btns"><button data-act="tEdit">Sửa</button>' +
+        '<button data-act="tSpouse"' + (sel.spouse ? ' disabled' : '') + '>＋ Vợ/chồng</button><button data-act="tChild">＋ Con</button><button data-act="tDeath" class="tb-quiet">' + (sel.dead ? 'Sửa ngày mất' : 'Ngày mất') + '</button></div>' : '') + '</div>';
     }
     html += '</div>';
     $('#view').innerHTML = html;
