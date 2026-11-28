@@ -287,3 +287,7 @@ body:not(.locked) { background: var(--bg) var(--pat); }
 .tog::after { inset: -10px; }
 
 .form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.tb-btns .tb-quiet { flex: 0 0 auto; background: transparent; box-shadow: none; border: 0; color: var(--muted, #8a7a6a); font-size: 12px; font-weight: 500; padding: 0 8px; text-decoration: underline; text-underline-offset: 3px; }
+.tb-btns { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; }
+.tb-btns .tb-quiet { height: 32px; }
