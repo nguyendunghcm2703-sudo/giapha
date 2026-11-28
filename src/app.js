@@ -851,6 +851,23 @@
   $('#tabs').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-tab]'); if (b) goTab(b.dataset.tab);
   });
+  // Làm mới: đưa trang về 100%, cây về như lúc mở (3 đời, zoom mặc định), rồi tải dữ liệu mới nhất
+  function resetAll() {
+    var m = document.querySelector('meta[name=viewport]');
+    if (m) {
+      var orig = m.getAttribute('content');
+      m.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+      setTimeout(function () { m.setAttribute('content', orig); }, 300);
+    }
+    state.seeded = false; if (state.loaded) seedCollapse();
+    state.tsel = null; tvFit = true; state.tab = 'tree';
+    window.scrollTo(0, 0);
+    if (state.locked) { render(); return; }
+    render();
+    if (state.dirty) { toast('Đã đưa về như lúc mở. Còn thay đổi chưa lưu nên chưa tải lại dữ liệu.'); return; }
+    refresh(true);
+  }
+  $('#bReset').addEventListener('click', resetAll);
   $('#bstat').addEventListener('click', function () { if (state.edit && state.dirty) push(); else if (state.offline) refresh(true); });
 
   var main = $('#view');
